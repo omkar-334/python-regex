@@ -8,10 +8,10 @@ def match_pattern(input_line, pattern):
         return any(i.isdigit() for i in input_line)
     elif pattern == "\\w":
         return any(i.isalnum() or i == "_" for i in input_line)
-    elif pattern.startswith("[^") and pattern.endswith("]"):
-        return all(i for i in pattern[2:-1] if i not in input_line)
     elif pattern.startswith("[") and pattern.endswith("]"):
-        return any(i for i in pattern[1:-1] if i in input_line)
+        if pattern[1] == r"^":
+            return not any(i in pattern for i in input_line)
+        return any(i in pattern for i in input_line)
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 
