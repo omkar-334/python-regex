@@ -1,14 +1,13 @@
 import sys
 
-import lark
-import pyparsing
-
 
 def match_pattern(input_line, pattern):
     if len(pattern) == 1:
         return pattern in input_line
     elif pattern == "\\d":
         return any(i.isdigit() for i in input_line)
+    elif pattern == "\\w":
+        return any(i.isalnum() or i == "_" for i in input_line)
     else:
         raise RuntimeError(f"Unhandled pattern: {pattern}")
 
