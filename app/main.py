@@ -26,26 +26,35 @@ def tokenize(pattern):
 
 def match(string, tokens):
     if not tokens:
-        return not string
+        return True
 
     if not string:
         return False
 
     curr = tokens[0]
 
-    if curr == "\\w":
-        if string[0].isalnum() or string[0] == "_":
-            return match(string[1:], tokens[1:])
-    elif curr == "\\d":
-        if string[0].isdigit():
-            return match(string[1:], tokens[1:])
-    elif curr == " ":
-        if string[0].isspace():
-            return match(string[1:], tokens[1:])
-    else:
-        if string.startswith(curr):
-            curridx = len(curr)
-            return match(string[curridx:], tokens[1:])
+    for i in range(len(string)):
+        if curr == "\\w":
+            if string[i].isalnum() or string[0] == "_":
+                return match(string[1:], tokens[1:])
+            else:
+                return match(string[1:], tokens)
+        elif curr == "\\d":
+            if string[i].isdigit():
+                return match(string[1:], tokens[1:])
+            else:
+                return match(string[1:], tokens)
+        elif curr == " ":
+            if string[i].isspace():
+                return match(string[1:], tokens[1:])
+            else:
+                return match(string[1:], tokens)
+        else:
+            if string.startswith(curr):
+                curridx = len(curr)
+                return match(string[curridx:], tokens[1:])
+            else:
+                return match(string[1:], tokens)
 
     return False
 
