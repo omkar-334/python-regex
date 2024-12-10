@@ -1,19 +1,62 @@
 import sys
 
 
+def tokenize(pattern):
+    tokens = []
+
+    i = 0
+    while True:
+        if i >= len(pattern):
+            break
+        if pattern[i] == "\\":
+            token = pattern[i : i + 2]
+            i += 2
+        elif pattern[i].isspace():
+            token = pattern[i]
+            i += 1
+        else:
+            literal = []
+            while i < len(pattern) and not pattern[i].isspace() and pattern[i] != "\\":
+                literal.append(pattern[i])
+                i += 1
+            token = "".join(literal)
+        tokens.append(token)
+    return tokens
+
+
+def match(string, tokens):
+    if not tokens:
+        return not string
+
+    if not string:
+        return False
+
+    curr = tokens[0]
+
+    if curr == "\\w":
+        if string[0].isalnum() or string[0] == "_":
+            return match(string[1:], tokens[1:])
+    elif curr == "\\d":
+        if string[0].isdigit():
+            return match(string[1:], tokens[1:])
+    elif curr == " ":
+        if string[0].isspace():
+            return match(string[1:], tokens[1:])
+    else:
+        if string.startswith(curr):
+            curridx = len(curr)
+            return match(string[curridx:], tokens[1:])
+
+    return False
+
+
 def match_pattern(input_line, pattern):
     if len(pattern) == 1:
         return pattern in input_line
-    elif pattern == "\\d":
-        return any(i.isdigit() for i in input_line)
-    elif pattern == "\\w":
-        return any(i.isalnum() or i == "_" for i in input_line)
-    elif pattern.startswith("[") and pattern.endswith("]"):
-        if pattern[1] == r"^":
-            return not any(i in pattern for i in input_line)
-        return any(i in pattern for i in input_line)
-    else:
-        raise RuntimeError(f"Unhandled pattern: {pattern}")
+
+    tokens = tokenize(pattern)
+
+    return match(input_line, tokens)
 
 
 def main():
