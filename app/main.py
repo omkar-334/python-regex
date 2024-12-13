@@ -14,6 +14,14 @@ def tokenize(pattern):
         elif pattern[i].isspace():
             token = pattern[i]
             i += 1
+        elif pattern[i] == "[":
+            group = []
+            while i < len(pattern) and pattern[i] != "]":
+                group.append(pattern[i])
+                i += 1
+            group.append("]")
+            i += 1
+            token = "".join(group)
         else:
             literal = []
             while i < len(pattern) and not pattern[i].isspace() and pattern[i] != "\\":
@@ -49,6 +57,13 @@ def match(string, tokens):
                 return match(string[1:], tokens[1:])
             else:
                 return match(string[1:], tokens)
+        elif curr.startswith("[") and curr.endswith("]"):
+            curr = curr[1:-1]
+            if curr[0] == "^":
+                curr = curr[1:]
+                return not any(i in string for i in curr)
+            else:
+                return any(i in string for i in curr)
         else:
             if string.startswith(curr):
                 curridx = len(curr)
