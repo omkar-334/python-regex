@@ -5,7 +5,8 @@ def tokenize(pattern):
     anchors = ["^", "$"]
     quantifiers = ["+", "?"]
     space = [" "]
-    meta = anchors + quantifiers + ["\\"] + space
+    wildcard = ["."]
+    meta = anchors + quantifiers + ["\\"] + space + wildcard
 
     tokens = []
     i = 0
@@ -14,7 +15,7 @@ def tokenize(pattern):
         print(i, tokens)
         if i >= len(pattern):
             break
-        if pattern[i] in anchors + space:
+        if pattern[i] in anchors + space + wildcard:
             token = pattern[i]
             i += 1
         elif pattern[i] in quantifiers:
@@ -75,6 +76,8 @@ def match(string, tokens, start, end):
                 return match(string[1:], tokens[1:], start, end)
             else:
                 return match(string[1:], tokens, start, end)
+        elif curr == ".":
+            return match(string[1:], tokens[1:], start, end)
         elif curr == " ":
             if string[i].isspace():
                 return match(string[1:], tokens[1:], start, end)
