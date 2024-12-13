@@ -45,6 +45,7 @@ def tokenize(pattern):
 
 
 def match(string, tokens, start, end):
+    print(string, tokens)
     if not tokens:
         if end:
             if not string:
@@ -85,11 +86,16 @@ def match(string, tokens, start, end):
             return match(string[curridx:], tokens[1:], start, end)
         elif curr.endswith("+"):
             rep = curr[-1]
-            if string.startswith(rep):
-                curridx = len(rep)
-                return match(string[curridx:], tokens, start, end)
-            else:
-                return match(string, tokens[1:], start, end)
+            count = 0
+            for char in string:
+                if char == rep:
+                    count += 1
+                else:
+                    break
+
+            if not count:
+                return False
+            return match(string[count:], tokens, start, end)
         else:
             if start:
                 return False
