@@ -2,20 +2,24 @@ import sys
 
 
 def tokenize(pattern):
-    meta = ["^", "$", " "]
-    meta_extended = meta + ["+", "\\"]
+    anchors = ["^", "$"]
+    quantifiers = ["+", "?"]
+    space = [" "]
+    meta = anchors + quantifiers + ["\\"] + space
+
     tokens = []
     i = 0
 
     while True:
+        print(i, tokens)
         if i >= len(pattern):
             break
-        if pattern[i] in meta:
+        if pattern[i] in anchors + space:
             token = pattern[i]
             i += 1
-        elif pattern[i] == "+":
+        elif pattern[i] in quantifiers:
             prev_token = tokens.pop()
-            token = prev_token[-1] + "+"
+            token = prev_token[-1] + pattern[i]
 
             prev_token = prev_token[:-1]
             if prev_token:
@@ -36,7 +40,7 @@ def tokenize(pattern):
             token = "".join(group)
         else:
             literal = []
-            while i < len(pattern) and pattern[i] not in meta_extended:
+            while i < len(pattern) and pattern[i] not in meta:
                 literal.append(pattern[i])
                 i += 1
             token = "".join(literal)
@@ -54,6 +58,8 @@ def match(string, tokens, start, end):
         return True
 
     if not string:
+        if len(tokens) == 1 and tokens[0].endswith("?"):
+            return True
         return False
 
     curr = tokens[0]
@@ -84,7 +90,7 @@ def match(string, tokens, start, end):
         elif string.startswith(curr):
             curridx = len(curr)
             return match(string[curridx:], tokens[1:], start, end)
-        elif curr.endswith("+"):
+        elif curr.endswith("+") or curr.endswith("?"):
             rep = curr[0]
             count = 0
             print(rep, string)
@@ -96,7 +102,8 @@ def match(string, tokens, start, end):
             print(count)
 
             if not count:
-                return False
+                if curr.endswith("+"):
+                    return False
             return match(string[count:], tokens[1:], start, end)
         else:
             if start:
