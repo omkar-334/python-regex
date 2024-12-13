@@ -13,7 +13,7 @@ def tokenize(pattern):
         if pattern[i] in meta:
             token = pattern[i]
             i += 1
-        if pattern[i] == "+":
+        elif pattern[i] == "+":
             prev_token = tokens.pop()
             token = prev_token[-1] + "+"
 
