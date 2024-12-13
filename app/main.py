@@ -3,8 +3,12 @@ import sys
 
 def tokenize(pattern):
     tokens = []
-
     i = 0
+
+    if pattern[0] == "^":
+        tokens.append("^")
+        i += 1
+
     while True:
         if i >= len(pattern):
             break
@@ -32,7 +36,7 @@ def tokenize(pattern):
     return tokens
 
 
-def match(string, tokens):
+def match(string, tokens, start=False):
     if not tokens:
         return True
 
@@ -44,19 +48,19 @@ def match(string, tokens):
     for i in range(len(string)):
         if curr == "\\w":
             if string[i].isalnum() or string[0] == "_":
-                return match(string[1:], tokens[1:])
+                return match(string[1:], tokens[1:], start)
             else:
-                return match(string[1:], tokens)
+                return match(string[1:], tokens, start)
         elif curr == "\\d":
             if string[i].isdigit():
-                return match(string[1:], tokens[1:])
+                return match(string[1:], tokens[1:], start)
             else:
-                return match(string[1:], tokens)
+                return match(string[1:], tokens, start)
         elif curr == " ":
             if string[i].isspace():
-                return match(string[1:], tokens[1:])
+                return match(string[1:], tokens[1:], start)
             else:
-                return match(string[1:], tokens)
+                return match(string[1:], tokens, start)
         elif curr.startswith("[") and curr.endswith("]"):
             curr = curr[1:-1]
             if curr[0] == "^":
@@ -64,12 +68,14 @@ def match(string, tokens):
                 return not any(i in string for i in curr)
             else:
                 return any(i in string for i in curr)
+        elif string.startswith(curr):
+            curridx = len(curr)
+            return match(string[curridx:], tokens[1:], start)
         else:
-            if string.startswith(curr):
-                curridx = len(curr)
-                return match(string[curridx:], tokens[1:])
+            if start:
+                return False
             else:
-                return match(string[1:], tokens)
+                return match(string[1:], tokens, start)
 
     return False
 
@@ -80,7 +86,14 @@ def match_pattern(input_line, pattern):
 
     tokens = tokenize(pattern)
 
-    return match(input_line, tokens)
+    if tokens[0] == "^":
+        start = True
+        tokens = tokens[1:]
+    else:
+        start = False
+
+    print(tokens, start)
+    return match(input_line, tokens, start)
 
 
 def main():
