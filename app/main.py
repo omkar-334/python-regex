@@ -85,17 +85,19 @@ def match(string, tokens, start, end):
             curridx = len(curr)
             return match(string[curridx:], tokens[1:], start, end)
         elif curr.endswith("+"):
-            rep = curr[-1]
+            rep = curr[0]
             count = 0
+            print(rep, string)
             for char in string:
                 if char == rep:
                     count += 1
                 else:
                     break
+            print(count)
 
             if not count:
                 return False
-            return match(string[count:], tokens, start, end)
+            return match(string[count:], tokens[1:], start, end)
         else:
             if start:
                 return False
