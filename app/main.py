@@ -2,21 +2,30 @@ import sys
 
 
 def tokenize(pattern):
+    meta = ["^", "$", " "]
+    meta_extended = meta + ["+", "\\"]
     tokens = []
     i = 0
 
     while True:
         if i >= len(pattern):
             break
-        if pattern[i] in ["^", "$"]:
+        if pattern[i] in meta:
             token = pattern[i]
             i += 1
+        if pattern[i] == "+":
+            prev_token = tokens.pop()
+            token = prev_token[-1] + "+"
+
+            prev_token = prev_token[:-1]
+            if prev_token:
+                tokens.append(prev_token)
+
+            i += 1
+
         elif pattern[i] == "\\":
             token = pattern[i : i + 2]
             i += 2
-        elif pattern[i].isspace():
-            token = pattern[i]
-            i += 1
         elif pattern[i] == "[":
             group = []
             while i < len(pattern) and pattern[i] != "]":
@@ -27,7 +36,7 @@ def tokenize(pattern):
             token = "".join(group)
         else:
             literal = []
-            while i < len(pattern) and not pattern[i].isspace() and pattern[i] not in ["^", "$", "\\"]:
+            while i < len(pattern) and pattern[i] not in meta_extended:
                 literal.append(pattern[i])
                 i += 1
             token = "".join(literal)
@@ -74,6 +83,13 @@ def match(string, tokens, start, end):
         elif string.startswith(curr):
             curridx = len(curr)
             return match(string[curridx:], tokens[1:], start, end)
+        elif curr.endswith("+"):
+            rep = curr[-1]
+            if string.startswith(rep):
+                curridx = len(rep)
+                return match(string[curridx:], tokens, start, end)
+            else:
+                return match(string, tokens[1:], start, end)
         else:
             if start:
                 return False
