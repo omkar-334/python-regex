@@ -66,7 +66,9 @@ def match(string, tokens, start, end):
     curr = tokens[0]
 
     for i in range(len(string)):
-        if curr == "\\w":
+        if curr == ".":
+            return match(string[1:], tokens[1:], start, end)
+        elif curr == "\\w":
             if string[i].isalnum() or string[0] == "_":
                 return match(string[1:], tokens[1:], start, end)
             else:
@@ -76,8 +78,6 @@ def match(string, tokens, start, end):
                 return match(string[1:], tokens[1:], start, end)
             else:
                 return match(string[1:], tokens, start, end)
-        elif curr == ".":
-            return match(string[1:], tokens[1:], start, end)
         elif curr == " ":
             if string[i].isspace():
                 return match(string[1:], tokens[1:], start, end)
