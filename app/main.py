@@ -12,7 +12,6 @@ def tokenize(pattern):
     i = 0
 
     while True:
-        print(i, tokens)
         if i >= len(pattern):
             break
         if pattern[i] in anchors + space + wildcard:
@@ -93,7 +92,23 @@ def match(string, tokens, start, end):
         elif string.startswith(curr):
             curridx = len(curr)
             return match(string[curridx:], tokens[1:], start, end)
+        elif curr in [".*", ".?", ".+"]:
+            print("top")
+            greedy = curr == ".*"
+
+            if greedy:  # For '.*'
+                for j in range(len(string) + 1):
+                    if match(string[j:], tokens[1:], start, end):
+                        return True
+            else:  # For '.?'
+                # Match zero characters
+                if match(string, tokens[1:], start, end):
+                    return True
+                if len(string) > 0 and match(string[1:], tokens[1:], start, end):
+                    return True
+            return False
         elif curr.endswith("+") or curr.endswith("?"):
+            print("bottom")
             rep = curr[0]
             count = 0
             print(rep, string)
@@ -102,7 +117,6 @@ def match(string, tokens, start, end):
                     count += 1
                 else:
                     break
-            print(count)
 
             if not count:
                 if curr.endswith("+"):
