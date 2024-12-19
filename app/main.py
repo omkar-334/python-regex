@@ -1,23 +1,25 @@
 import sys
 
+d = dict(
+    anchors=["^", "$"],
+    quantifiers=["+", "?"],
+    space=[" "],
+    wildcard=["."],
+    escape=["\\"],
+)
+
 
 def tokenize(pattern):
-    anchors = ["^", "$"]
-    quantifiers = ["+", "?"]
-    space = [" "]
-    wildcard = ["."]
-    meta = anchors + quantifiers + ["\\"] + space + wildcard
-
     tokens = []
     i = 0
 
     while True:
         if i >= len(pattern):
             break
-        if pattern[i] in anchors + space + wildcard:
+        if pattern[i] in d["anchors"] + d["space"] + d["wildcard"]:
             token = pattern[i]
             i += 1
-        elif pattern[i] in quantifiers:
+        elif pattern[i] in d["quantifiers"]:
             prev_token = tokens.pop()
             token = prev_token[-1] + pattern[i]
 
@@ -32,46 +34,40 @@ def tokenize(pattern):
             i += 2
         elif pattern[i] == "(":
             group = []
+            i += 1
             while i < len(pattern) and pattern[i] != ")":
                 group.append(pattern[i])
                 i += 1
-            group.append(")")
+            token = "(" + "".join(group) + ")"
             i += 1
-            token = "".join(group)
         elif pattern[i] == "[":
             group = []
+            i += 1
             while i < len(pattern) and pattern[i] != "]":
                 group.append(pattern[i])
                 i += 1
-            group.append("]")
+            token = "[" + "".join(group) + "]"
             i += 1
-            token = "".join(group)
         else:
             literal = []
-            while i < len(pattern) and pattern[i] not in meta:
+            while i < len(pattern) and pattern[i] not in [i for lst in d.values() for i in lst]:
                 literal.append(pattern[i])
                 i += 1
             token = "".join(literal)
         tokens.append(token)
 
-    if tokens[0] == "^":
-        start = True
-        tokens = tokens[1:]
-    else:
-        start = False
-
-    if tokens[-1] == "$":
-        end = True
-        tokens = tokens[:-1]
-    else:
-        end = False
+    start = tokens[0] == "^"
+    end = tokens[-1] == "$"
+    if start:
+        tokens.pop(0)
+    if end:
+        tokens.pop()
 
     return tokens, start, end
 
 
 def tokenize_alternation(token):
-    token = token.removesuffix(")")
-    token = token.removeprefix("(")
+    token = token[1:-1]
     patterns = token.split("|")
     output = []
     for i in patterns:
@@ -80,7 +76,6 @@ def tokenize_alternation(token):
 
 
 def match(string, tokens, start, end):
-    print(string, tokens)
     if not tokens:
         if end:
             if not string:
@@ -115,7 +110,6 @@ def match(string, tokens, start, end):
                 return match(string[1:], tokens, start, end)
         elif curr.startswith("(") and curr.endswith(")"):
             patterns = tokenize_alternation(curr)
-            print(patterns)
             return any(match(string, i[0], i[1], i[2]) for i in patterns)
         elif curr.startswith("[") and curr.endswith("]"):
             curr = curr[1:-1]
@@ -168,8 +162,6 @@ def match_pattern(input_line, pattern):
         return pattern in input_line
 
     tokens, start, end = tokenize(pattern)
-
-    print(tokens, start, end)
     return match(input_line, tokens, start, end)
 
 
