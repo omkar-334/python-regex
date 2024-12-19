@@ -30,6 +30,14 @@ def tokenize(pattern):
         elif pattern[i] == "\\":
             token = pattern[i : i + 2]
             i += 2
+        elif pattern[i] == "(":
+            group = []
+            while i < len(pattern) and pattern[i] != ")":
+                group.append(pattern[i])
+                i += 1
+            group.append(")")
+            i += 1
+            token = "".join(group)
         elif pattern[i] == "[":
             group = []
             while i < len(pattern) and pattern[i] != "]":
@@ -45,7 +53,30 @@ def tokenize(pattern):
                 i += 1
             token = "".join(literal)
         tokens.append(token)
-    return tokens
+
+    if tokens[0] == "^":
+        start = True
+        tokens = tokens[1:]
+    else:
+        start = False
+
+    if tokens[-1] == "$":
+        end = True
+        tokens = tokens[:-1]
+    else:
+        end = False
+
+    return tokens, start, end
+
+
+def tokenize_alternation(token):
+    token = token.removesuffix(")")
+    token = token.removeprefix("(")
+    patterns = token.split("|")
+    output = []
+    for i in patterns:
+        output.append(tokenize(i))
+    return output
 
 
 def match(string, tokens, start, end):
@@ -82,6 +113,10 @@ def match(string, tokens, start, end):
                 return match(string[1:], tokens[1:], start, end)
             else:
                 return match(string[1:], tokens, start, end)
+        elif curr.startswith("(") and curr.endswith(")"):
+            patterns = tokenize_alternation(curr)
+            print(patterns)
+            return any(match(string, i[0], i[1], i[2]) for i in patterns)
         elif curr.startswith("[") and curr.endswith("]"):
             curr = curr[1:-1]
             if curr[0] == "^":
@@ -93,7 +128,6 @@ def match(string, tokens, start, end):
             curridx = len(curr)
             return match(string[curridx:], tokens[1:], start, end)
         elif curr in [".*", ".?", ".+"]:
-            print("top")
             greedy = curr == ".*"
 
             if greedy:  # For '.*'
@@ -108,10 +142,8 @@ def match(string, tokens, start, end):
                     return True
             return False
         elif curr.endswith("+") or curr.endswith("?"):
-            print("bottom")
             rep = curr[0]
             count = 0
-            print(rep, string)
             for char in string:
                 if char == rep:
                     count += 1
@@ -135,19 +167,7 @@ def match_pattern(input_line, pattern):
     if len(pattern) == 1:
         return pattern in input_line
 
-    tokens = tokenize(pattern)
-
-    if tokens[0] == "^":
-        start = True
-        tokens = tokens[1:]
-    else:
-        start = False
-
-    if tokens[-1] == "$":
-        end = True
-        tokens = tokens[:-1]
-    else:
-        end = False
+    tokens, start, end = tokenize(pattern)
 
     print(tokens, start, end)
     return match(input_line, tokens, start, end)
